@@ -8,21 +8,47 @@
 #include <memory>
 
 #include <ctime>
+
+
+
+
+extern "C"{
+    //static CityFlow::Engine *singleton=NULL;
+    
+    extern  DL_EXPORT(void *) init_engine(const char *config_path, const int num_threads);
+    
+    DL_EXPORT(void *) init_engine(const char *config_path_p, const int num_threads){
+        std::string config_path(config_path_p);
+        return new CityFlow::Engine(config_path, num_threads);
+    }
+    
+}// Extern
+
+
+static CityFlow::Engine *stam = (CityFlow::Engine *)init_engine("/Users/ishay/projects/CityFlow/data/esquare3/config_engine.json", 1);  // For linker
+
+
 namespace CityFlow {
 
-    Engine::Engine(const std::string &configFile, int threadNum) : threadNum(threadNum), startBarrier(threadNum + 1),
-                                                                   endBarrier(threadNum + 1) {
+    const float MAX_XY_VAL = 9999999.0 ;
+    
+    Engine::Engine(const std::string &configFile, int threadNum) : threadNum(threadNum), startBarrier(threadNum + 1), endBarrier(threadNum + 1) {
         for (int i = 0; i < threadNum; i++) {
             threadVehiclePool.emplace_back();
             threadRoadPool.emplace_back();
             threadIntersectionPool.emplace_back();
             threadDrivablePool.emplace_back();
         }
+        
+        min_pos = Point(MAX_XY_VAL, MAX_XY_VAL);
+        max_pos = Point(-MAX_XY_VAL, -MAX_XY_VAL);
+
         bool success = loadConfig(configFile);
         if (!success) {
             std::cerr << "load config failed!" << std::endl;
         }
 
+        
         for (int i = 0; i < threadNum; i++) {
             threadPool.emplace_back(&Engine::threadController, this,
                                     std::ref(threadVehiclePool[i]),
@@ -48,7 +74,7 @@ namespace CityFlow {
 
         try {
             interval = getJsonMember<double>("interval", document);
-            warnings = false;
+            warnings = true;
             rlTrafficLight = getJsonMember<bool>("rlTrafficLight", document);
             laneChange = getJsonMember<bool>("laneChange", document, false);
             seed = getJsonMember<int>("seed", document);
@@ -56,6 +82,13 @@ namespace CityFlow {
             dir = getJsonMember<const char*>("dir", document);
             std::string roadnetFile = getJsonMember<const char*>("roadnetFile", document);
             std::string flowFile = getJsonMember<const char*>("flowFile", document);
+
+            float x1 = getJsonMember<float>("x1", document);
+            float y1 = getJsonMember<float>("y1", document);
+            float x2 = getJsonMember<float>("x2", document);
+            float y2 = getJsonMember<float>("y2", document);
+            min_pos = Point(x1, y1);
+            max_pos = Point(x2, y2);
 
             if (!loadRoadNet(dir + roadnetFile)) {
                 std::cerr << "loading roadnet file error!" << std::endl;
@@ -563,6 +596,10 @@ namespace CityFlow {
         endBarrier.wait();
     }
 
+    void Engine::bumpPhase(){
+        roadnet.bumpPhase();
+    }
+    
     void Engine::nextStep() {
         for (auto &flow : flows)
             flow.nextStep(interval);
@@ -584,6 +621,8 @@ namespace CityFlow {
             std::vector<Intersection> &intersections = roadnet.getIntersections();
             for (auto &intersection : intersections)
                 intersection.getTrafficLight().passTime(interval);
+        } else if (step % 10 == 0) {
+            //bumpPhase();
         }
 
         if (saveReplay) {
@@ -687,7 +726,7 @@ namespace CityFlow {
             tt += getCurrentTime() - vehicle->getEnterTime();
             n++;
         }
-        return n == 0 ? 0 : tt / n;
+        return n == 0 ? 0.0 : tt / n;
     }
 
     void Engine::pushVehicle(const std::map<std::string, double> &info, const std::vector<std::string> &roads) {
@@ -875,4 +914,57 @@ namespace CityFlow {
         }
     }
 
+    points_vector_d Engine::getVehiclesLocation(bool includeWaiting) const {
+        points_vector_d ret;
+        ret.reserve(activeVehicleCount);
+        for (const auto &vehiclePair: vehiclePool) {
+            const Vehicle *vehicle = vehiclePair.second.first;
+            if (vehicle->isReal() && (includeWaiting || vehicle->isRunning())) {
+                CityFlow::Point p=vehicle->getPoint();
+                std_point_d pp(p.x, p.y);
+                ret.emplace_back(pp);
+            }
+        }
+        return ret;
+    }
+    /*
+    void Engine::get_as_image(void *p){
+        cv::Mat mat_(cv::Size(MAT_SIZE, MAT_SIZE), CV_8U, p);// Wrap with opencv matrix. Notice assume np.float32. watch out, no type checks.
+        points_vector_d v = getVehiclesLocation();
+        if (v.size() == 0) {
+            mat_ = cv::Mat::zeros(cv::Size(MAT_SIZE, MAT_SIZE), CV_8U);
+            return;
+        }
+        cv::Mat m  = cv::Mat(cv::Size(int(v.size()), 1), CV_32FC2, v.data());
+        Point range = max_pos - min_pos;
+        //cv::Point2f range3 = max_pos - min_pos;
+        cv::Point2f range_1 = cv::Point2f((MAT_SIZE-1.0)/range.x, (MAT_SIZE-1.0)/range.y);
+        m.forEach<cv::Point2f>(
+                           [range_1, this](cv::Point2f &pixel, const int * position) -> void
+                           {
+                               pixel.x -= min_pos.x;
+                               pixel.y -= min_pos.y;
+                               pixel.x *= range_1.x;
+                               pixel.y *= range_1.y;
+                           }
+                           );
+        cv::Mat normlized_int(cv::Size(MAT_SIZE, MAT_SIZE), CV_8U);
+        
+        m.convertTo(normlized_int, CV_8U); //
+        ret_image = cv::Mat::zeros(cv::Size(MAT_SIZE, MAT_SIZE), CV_8U);  // Zero mat
+        normlized_int.forEach<cv::Point>
+        (
+         [this](cv::Point &point, const int * position) -> void
+         {
+             //+= 1;
+             if (point.x >=0 && point.x < MAT_SIZE && point.y >= 0 && point.y < MAT_SIZE){
+                 auto & a = ret_image.at<int>(int(point.x), int(point.y));
+                 a++;
+             }
+         }
+         );
+        ret_image.copyTo(mat_);
+        //mat_ = ret_image;
+    } */
+    
 }

@@ -1,7 +1,7 @@
 #ifndef CITYFLOW_TYPEDEF_H
 #define CITYFLOW_TYPEDEF_H
 
-#include "rapidjson/document.h"
+#include <rapidjson/document.h>
 #include "dtoa_milo.h"
 
 #include <vector>
@@ -38,6 +38,8 @@ namespace CityFlow {
     Point operator-(const Point &A, const Point &B);
     Point operator+(const Point &A, const Point &B);
     Point operator-(const Point &A);
+    Point &operator-=(Point &A, const Point &B);
+    
     double crossMultiply(const Point &A, const Point &B);
     double dotMultiply(const Point &A, const Point &B);
     double calcAng(Point A, Point B);

@@ -84,6 +84,7 @@ namespace CityFlow {
         void initCrosses();
 
     public:
+        
         std::string getId() const { return this->id; }
 
         const TrafficLight &getTrafficLight() const { return trafficLight; }
@@ -495,6 +496,9 @@ namespace CityFlow {
         Point getPoint(const Point &p1, const Point &p2, double a);
 
     public:
+        
+        void bumpPhase();
+        
         bool loadFromJson(std::string jsonFileName);
 
         rapidjson::Value convertToJson(rapidjson::Document::AllocatorType &allocator);

@@ -26,22 +26,38 @@ namespace CityFlow {
         return phases;
     }
 
+    
     void TrafficLight::passTime(double seconds) {
         if(intersection->isVirtual)
             return;
         remainDuration -= seconds;
+        if (0 && (int) phases.size()>1){
+            //std::cout<<" (int) phases.size()"<<std::endl;
+        }
         while (remainDuration <= 0.0) {
-            curPhaseIndex = (curPhaseIndex + 1) % (int) phases.size();
+            setPhase((curPhaseIndex + 1) % (int) phases.size());
             remainDuration += phases[curPhaseIndex].time;
         }
+    }
+    
+    void TrafficLight::bumpPhase() {
+        /* Bump to next phase regardless of time */
+        if(intersection->isVirtual)
+            return;
+        setPhase((curPhaseIndex + 1) % (int) phases.size());
+        remainDuration = phases[curPhaseIndex].time;
     }
 
     void TrafficLight::setPhase(int phaseIndex) {
         curPhaseIndex = phaseIndex;
+        std::cout<<" Phase changed to:"<<phases[curPhaseIndex]<<std::endl;
     }
 
     void TrafficLight::reset() {
         init(0);
     }
 
+    void TrafficLight::setVerbose(int _verbose){
+        verbose = _verbose;
+    }
 }

@@ -3,7 +3,7 @@ project(cityflow)
 
 set(CMAKE_CXX_STANDARD "11" CACHE STRING "")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -DRAPIDJSON_HAS_STDSTRING=1")
-set(CMAKE_CXX_FLAGS_RELEASE "-O2")
+set(CMAKE_CXX_FLAGS_RELEASE "-O2 -g")
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
@@ -54,6 +54,7 @@ endforeach()
 
 add_subdirectory(extern/pybind11)
 include_directories(extern/rapidjson/include)
+include_directories(extern/opencv2/include)
 
 add_subdirectory(src)
 

@@ -281,9 +281,9 @@ namespace CityFlow {
 
         inline void setSegmentIndex(int segmentIndex) { laneChangeInfo.segmentIndex = segmentIndex; }
 
-        inline void setShadow(Vehicle *veh) { laneChangeInfo.partnerType = 1, laneChangeInfo.partner = veh; }
+        inline void setShadow(Vehicle *veh) { laneChangeInfo.partnerType = 1; laneChangeInfo.partner = veh; }
 
-        inline void setParent(Vehicle *veh) { laneChangeInfo.partnerType = 2, laneChangeInfo.partner = veh; }
+        inline void setParent(Vehicle *veh) { laneChangeInfo.partnerType = 2; laneChangeInfo.partner = veh; }
 
         void setLane(Lane *nextLane);
 

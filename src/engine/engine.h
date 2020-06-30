@@ -11,17 +11,31 @@
 #include <set>
 #include <random>
 #include <fstream>
+//#include <opencv2/opencv.hpp>
 
+#ifndef DL_EXPORT  // Windows Oooo Windows, If only you were BSD.
+#define DL_EXPORT(kind) kind
+#endif
+
+typedef std::pair<double, double> std_point_d;
+
+typedef std::vector<CityFlow::Point> points_vector;
+typedef std::vector<std_point_d> points_vector_d;
 
 namespace CityFlow {
 
     class Engine {
         friend class Archive;
-    private:
+    public:
         static bool vehicleCmp(const std::pair<Vehicle *, double> &a, const std::pair<Vehicle *, double> &b) {
             return a.second > b.second;
         }
 
+        Point min_pos;
+        Point max_pos;
+        int MAT_SIZE = 1024;
+        //cv::Mat ret_image;
+        
         std::map<int, std::pair<Vehicle *, int>> vehiclePool;
         std::map<std::string, Vehicle *> vehicleMap;
         std::vector<std::set<Vehicle *>> threadVehiclePool;
@@ -125,7 +139,9 @@ namespace CityFlow {
         void notifyCross();
 
         void nextStep();
-
+        
+        void bumpPhase();
+        
         bool checkPriority(int priority);
 
         void pushVehicle(Vehicle *const vehicle, bool pushToDrivable = true);
@@ -139,6 +155,9 @@ namespace CityFlow {
         // RL related api
 
         void pushVehicle(const std::map<std::string, double> &info, const std::vector<std::string> &roads);
+        
+        points_vector_d getVehiclesLocation(bool includeWaiting=false) const;
+        //void get_as_image(void *mat);
 
         size_t getVehicleCount() const;
 
@@ -171,7 +190,8 @@ namespace CityFlow {
         void setRandomSeed(int seed) { rnd.seed(seed); }
         
         void reset(bool resetRnd = false);
-
+        
+        
         // archive
         void load(const Archive &archive) { archive.resume(*this); }
         Archive snapshot() { return Archive(*this); }

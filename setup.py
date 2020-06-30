@@ -38,6 +38,7 @@ class CMakeBuild(build_ext):
                       '-DVERSION="' + self.distribution.get_version() + '"']
 
         cfg = 'Debug' if self.debug else 'Release'
+        print(f'Buildinng {cfg}')
         build_args = ['--config', cfg]
 
         if platform.system() == "Windows":

@@ -64,7 +64,7 @@ namespace CityFlow {
                                       const T &object, rapidjson::MemoryPoolAllocator<> &allocator) {
             if (object) {
                 jsonObject.AddMember(
-                        rapidjson::Value(name, allocator).Move(),
+                        rapidjson::Value(name.c_str(), allocator).Move(),
                         rapidjson::Value(object->getId(), allocator).Move(),
                         allocator
                         );

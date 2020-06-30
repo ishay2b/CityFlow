@@ -3,20 +3,8 @@ import pandas as pd
 import os
 import csv
 import json
+from pathlib import Path as _P
 
-config_dict = {
-            "interval": 1.0,
-            "warning": True,
-            "seed": 0,
-            "dir": "data/",
-            "roadnetFile": "atlanta_out.json", 
-            "flowFile": "atlanta_flow.json",
-            "rlTrafficLight": False,
-            "laneChange": False,
-            "saveReplay": True,
-            "roadnetLogFile":"frontend/test_atlanta.json", 
-            "replayLogFile": "frontend/atlanta_replay.txt"
-        }
 # config_dict["roadnetFile"] = "hangzhou_no_uturn.json"
 config_path = os.path.join('data', 'config_engine.json')
 with open(config_path, 'w') as config_file:

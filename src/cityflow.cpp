@@ -14,6 +14,7 @@ PYBIND11_MODULE(cityflow, m) {
             "thread_num"_a=1
         )
         .def("next_step", &CityFlow::Engine::nextStep)
+        .def("bump_phase", &CityFlow::Engine::bumpPhase)    
         .def("get_vehicle_count", &CityFlow::Engine::getVehicleCount)
         .def("get_vehicles", &CityFlow::Engine::getVehicles, "include_waiting"_a=false)
         .def("get_lane_vehicle_count", &CityFlow::Engine::getLaneVehicleCount)
@@ -22,6 +23,8 @@ PYBIND11_MODULE(cityflow, m) {
         .def("get_vehicle_speed", &CityFlow::Engine::getVehicleSpeed)
         .def("get_vehicle_info", &CityFlow::Engine::getVehicleInfo, "vehicle_id"_a)
         .def("get_vehicle_distance", &CityFlow::Engine::getVehicleDistance)
+        .def("get_vehicles_location", &CityFlow::Engine::getVehiclesLocation, "include_waiting"_a=false)
+        //.def("get_as_image", &CityFlow::Engine::get_as_image, "mat")
         .def("get_leader", &CityFlow::Engine::getLeader, "vehicle_id"_a)
         .def("get_current_time", &CityFlow::Engine::getCurrentTime)
         .def("get_average_travel_time", &CityFlow::Engine::getAverageTravelTime)

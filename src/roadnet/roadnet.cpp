@@ -39,6 +39,14 @@ namespace CityFlow {
         return Point((p2.x - p1.x) * a + p1.x, (p2.y - p1.y) * a + p1.y);
     }
 
+    void RoadNet::bumpPhase(){
+        std::vector<Intersection> &intersections = getIntersections();
+        for (auto &intersection : intersections){
+            auto &trafficLight_ = intersection.getTrafficLight();
+            trafficLight_.bumpPhase();
+        }
+    }
+    
     bool RoadNet::loadFromJson(std::string jsonFileName) {
         rapidjson::Document document;
         if (!readJsonFromFile(jsonFileName, document)) {
@@ -262,11 +270,13 @@ namespace CityFlow {
                 const auto &trafficLightValue = getJsonMemberObject("trafficLight", curInterValue);
                 path.emplace_back("trafficLight");
                 const auto &lightPhasesValue = getJsonMemberArray("lightphases", trafficLightValue);
+                int phase_index = 0 ;
                 for (const auto &lightPhaseValue : lightPhasesValue.GetArray()) {
                     path.emplace_back("lightphases[" + std::to_string(intersections[i].trafficLight.phases.size()) + "]");
                     if (!lightPhaseValue.IsObject())
                         throw JsonTypeError("lightphase", "object");
                     LightPhase lightPhase;
+                    lightPhase.phase = phase_index;
                     lightPhase.time = getJsonMember<double>("time", lightPhaseValue);
                     lightPhase.roadLinkAvailable = std::vector<bool>(intersections[i].roadLinks.size(), false);
                     const auto& availableRoadLinksValue =
@@ -283,6 +293,7 @@ namespace CityFlow {
                     }
                     intersections[i].trafficLight.phases.push_back(lightPhase);
                     path.pop_back();
+                    phase_index++;
                 }
                 path.pop_back(); // End of traffic light
                 intersections[i].trafficLight.init(0);

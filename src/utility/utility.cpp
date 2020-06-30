@@ -16,6 +16,13 @@ namespace CityFlow {
         return {A.x * k, A.y * k};
     }
 
+    Point &operator-=(Point &A, const Point &B) {
+        A.x -= B.x;
+        A.y -= B.y;
+        return A;
+    }
+
+    
     Point operator-(const Point &A, const Point &B) {
         return {A.x - B.x, A.y - B.y};
     }

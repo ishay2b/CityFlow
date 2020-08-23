@@ -39,12 +39,14 @@ namespace CityFlow {
         return Point((p2.x - p1.x) * a + p1.x, (p2.y - p1.y) * a + p1.y);
     }
 
-    void RoadNet::bumpPhase(){
+    int RoadNet::bumpPhase(){
+        int ret  = 0;
         std::vector<Intersection> &intersections = getIntersections();
         for (auto &intersection : intersections){
             auto &trafficLight_ = intersection.getTrafficLight();
-            trafficLight_.bumpPhase();
+            ret = trafficLight_.bumpPhase();
         }
+        return ret;
     }
     
     bool RoadNet::loadFromJson(std::string jsonFileName) {

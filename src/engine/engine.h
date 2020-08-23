@@ -31,11 +31,8 @@ namespace CityFlow {
             return a.second > b.second;
         }
 
-        Point min_pos;
-        Point max_pos;
-        int MAT_SIZE = 1024;
         //cv::Mat ret_image;
-        
+        std::vector<int> getTrafficLightPhases();
         std::map<int, std::pair<Vehicle *, int>> vehiclePool;
         std::map<std::string, Vehicle *> vehicleMap;
         std::vector<std::set<Vehicle *>> threadVehiclePool;
@@ -128,6 +125,10 @@ namespace CityFlow {
     public:
         std::mt19937 rnd;
 
+        rapidjson::Document m_config;  // config doc - used when want to pass vars in the file and used outside the engine file. saves loading and parsing.
+
+        rapidjson::Document root;  // Roadnet file - moved as membe to be used outside engine scope.
+
         Engine(const std::string &configFile, int threadNum);
 
         double getInterval() const { return interval; }
@@ -140,7 +141,7 @@ namespace CityFlow {
 
         void nextStep();
         
-        void bumpPhase();
+        int bumpPhase();
         
         bool checkPriority(int priority);
 
@@ -149,7 +150,9 @@ namespace CityFlow {
         void setLogFile(const std::string &jsonFile, const std::string &logFile);
 
         void initSegments();
-
+        
+        double getAvgVehiclesSpeed() const ;
+        
         ~Engine();
 
         // RL related api

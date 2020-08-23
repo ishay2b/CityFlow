@@ -25,7 +25,7 @@ extern "C"{
 }// Extern
 
 
-static CityFlow::Engine *stam = (CityFlow::Engine *)init_engine("/Users/ishay/projects/CityFlow/data/esquare3/config_engine.json", 1);  // For linker
+//static CityFlow::Engine *stam = (CityFlow::Engine *)init_engine("/Users/ishay/projects/CityFlow/data/esquare3/config_engine.json", 1);  // For linker
 
 
 namespace CityFlow {
@@ -40,9 +40,6 @@ namespace CityFlow {
             threadDrivablePool.emplace_back();
         }
         
-        min_pos = Point(MAX_XY_VAL, MAX_XY_VAL);
-        max_pos = Point(-MAX_XY_VAL, -MAX_XY_VAL);
-
         bool success = loadConfig(configFile);
         if (!success) {
             std::cerr << "load config failed!" << std::endl;
@@ -61,34 +58,26 @@ namespace CityFlow {
 
 
     bool Engine::loadConfig(const std::string &configFile) {
-        rapidjson::Document document;
-        if (!readJsonFromFile(configFile, document)) {
+        if (!readJsonFromFile(configFile, m_config)) {
             std::cerr << "cannot open config file!" << std::endl;
             return false;
         }
 
-        if (!document.IsObject()) {
+        if (!m_config.IsObject()) {
             std::cerr << "wrong format of config file" << std::endl;
             return false;
         }
 
         try {
-            interval = getJsonMember<double>("interval", document);
+            interval = getJsonMember<double>("interval", m_config);
             warnings = true;
-            rlTrafficLight = getJsonMember<bool>("rlTrafficLight", document);
-            laneChange = getJsonMember<bool>("laneChange", document, false);
-            seed = getJsonMember<int>("seed", document);
+            rlTrafficLight = getJsonMember<bool>("rlTrafficLight", m_config);
+            laneChange = getJsonMember<bool>("laneChange", m_config, false);
+            seed = getJsonMember<int>("seed", m_config);
             rnd.seed(seed);
-            dir = getJsonMember<const char*>("dir", document);
-            std::string roadnetFile = getJsonMember<const char*>("roadnetFile", document);
-            std::string flowFile = getJsonMember<const char*>("flowFile", document);
-
-            float x1 = getJsonMember<float>("x1", document);
-            float y1 = getJsonMember<float>("y1", document);
-            float x2 = getJsonMember<float>("x2", document);
-            float y2 = getJsonMember<float>("y2", document);
-            min_pos = Point(x1, y1);
-            max_pos = Point(x2, y2);
+            dir = getJsonMember<const char*>("dir", m_config);
+            std::string roadnetFile = getJsonMember<const char*>("roadnetFile", m_config);
+            std::string flowFile = getJsonMember<const char*>("flowFile", m_config);
 
             if (!loadRoadNet(dir + roadnetFile)) {
                 std::cerr << "loading roadnet file error!" << std::endl;
@@ -101,11 +90,11 @@ namespace CityFlow {
             }
 
             if (warnings) checkWarning();
-            saveReplayInConfig = saveReplay = getJsonMember<bool>("saveReplay", document);
+            saveReplayInConfig = saveReplay = getJsonMember<bool>("saveReplay", m_config);
 
             if (saveReplay) {
-                std::string roadnetLogFile = getJsonMember<const char*>("roadnetLogFile", document);
-                std::string replayLogFile = getJsonMember<const char*>("replayLogFile", document);
+                std::string roadnetLogFile = getJsonMember<const char*>("roadnetLogFile", m_config);
+                std::string replayLogFile = getJsonMember<const char*>("replayLogFile", m_config);
                 setLogFile(dir + roadnetLogFile, dir + replayLogFile);
             }
         } catch (const JsonFormatError &e) {
@@ -137,7 +126,6 @@ namespace CityFlow {
     }
 
     bool Engine::loadFlow(const std::string &jsonFilename) {
-        rapidjson::Document root;
         if (!readJsonFromFile(jsonFilename, root)) {
             std::cerr << "cannot open flow file!" << std::endl;
             return false;
@@ -596,8 +584,8 @@ namespace CityFlow {
         endBarrier.wait();
     }
 
-    void Engine::bumpPhase(){
-        roadnet.bumpPhase();
+    int Engine::bumpPhase(){
+        return roadnet.bumpPhase();
     }
     
     void Engine::nextStep() {
@@ -706,6 +694,17 @@ namespace CityFlow {
         return ret;
     }
 
+    double Engine::getAvgVehiclesSpeed() const {
+        double ret = 0.0;
+        int n = 0 ;
+        for (const Vehicle* vehicle : getRunningVehicles()) {
+            ret += vehicle->getSpeed();
+            n ++;
+        }
+        ret = n>0? ret / n : 0.0;
+        return ret;
+    }
+    
     std::map<std::string, double> Engine::getVehicleDistance() const {
         std::map<std::string, double> ret;
         for (const Vehicle* vehicle : getRunningVehicles()) {
@@ -762,6 +761,17 @@ namespace CityFlow {
         }
         roadnet.getIntersectionById(id)->getTrafficLight().setPhase(phaseIndex);
     }
+    
+    std::vector<int> Engine::getTrafficLightPhases() {
+        std::vector<int> phases;
+        for (auto &intersection : roadnet.getIntersections()){
+            if (!intersection.isVirtualIntersection()){
+                phases.push_back(intersection.getTrafficLight().getCurrentPhaseIndex());
+            }
+        }
+        return phases;
+    }
+    
 
     void Engine::setReplayLogFile(const std::string &logFile) {
         if (!saveReplayInConfig) {

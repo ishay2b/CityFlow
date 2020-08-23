@@ -59,7 +59,7 @@ namespace CityFlow {
 
         void setPhase(int phaseIndex);
         
-        void bumpPhase();
+        int bumpPhase();
         
         void reset();
         

@@ -29,10 +29,10 @@ namespace CityFlow {
     
     void TrafficLight::passTime(double seconds) {
         if(intersection->isVirtual)
-            return;
+            return; 
         remainDuration -= seconds;
         if (0 && (int) phases.size()>1){
-            //std::cout<<" (int) phases.size()"<<std::endl;
+            std::cout<<" (int) phases.size()"<<std::endl;
         }
         while (remainDuration <= 0.0) {
             setPhase((curPhaseIndex + 1) % (int) phases.size());
@@ -40,17 +40,18 @@ namespace CityFlow {
         }
     }
     
-    void TrafficLight::bumpPhase() {
+    int TrafficLight::bumpPhase() {
         /* Bump to next phase regardless of time */
         if(intersection->isVirtual)
-            return;
+            return 0;
         setPhase((curPhaseIndex + 1) % (int) phases.size());
         remainDuration = phases[curPhaseIndex].time;
+        return curPhaseIndex;
     }
 
     void TrafficLight::setPhase(int phaseIndex) {
         curPhaseIndex = phaseIndex;
-        std::cout<<" Phase changed to:"<<phases[curPhaseIndex]<<std::endl;
+        //std::cout<<" Phase changed to:"<<phases[curPhaseIndex]<<std::endl;
     }
 
     void TrafficLight::reset() {

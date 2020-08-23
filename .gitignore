@@ -18,3 +18,8 @@ cityflow.cpython-37m-darwin.so
 cityflow.cpython-37m-darwin.so cityflow.cpython-37m-x86_64-linux-gnu.so
 cityflow.cpython-37m-x86_64-linux-gnu.so
 esquare_ws.xcworkspace
+.spyproject
+*.h5f
+extern/
+extern/rapidjson
+xcode_build

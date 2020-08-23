@@ -497,7 +497,7 @@ namespace CityFlow {
 
     public:
         
-        void bumpPhase();
+        int bumpPhase();
         
         bool loadFromJson(std::string jsonFileName);
 
